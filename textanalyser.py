@@ -135,8 +135,9 @@ def main():
         posTrainings += 1
         f.close()
 
+    TotalTrainings = posTrainings
     # limpo os sets com palavras que possam ser irrelevantes ou pouco apareceram
-    cleanSets((negTrainings/6), (posTrainings/7))
+    cleanSets((TotalTrainings/6), (TotalTrainings/7))
 
     # começo a contar o tempo de treinamento
     training_time = (time.time() - start_time)
@@ -156,10 +157,10 @@ def main():
     # classifico enquanto houver arquivo ou eu não ultrapassar o limite de classificações
     classifying_time = time.time()
     for filename in os.listdir(path):
-        if totalValid > maxClass:
+        if totalValid >= maxClass:
             break
-        if (TotalTrainings % 650) == 0:
-            cleanSets((TotalTrainings / 10), (TotalTrainings / 10))
+        if (TotalTrainings % 250) == 0:
+            cleanSets((TotalTrainings / 6), (TotalTrainings / 7))
         filename = path + filename
         validFile = open(filename, encoding='utf-8')
         print('Reading file: ',filename)
