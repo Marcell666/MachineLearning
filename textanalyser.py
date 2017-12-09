@@ -1,4 +1,5 @@
 from string import punctuation
+import time
 # os e para iterar em arquivos
 import os
 
@@ -6,6 +7,9 @@ positiveSet = set()
 negativeSet = set()
 PosPoints = dict()
 NegPoints = dict()
+totalPosReviews = 0
+totalNegReviews = 0
+TotalTrainings = 0
 
 def uniqueWords(sentence):
     return set(sentence.translate(str.maketrans(' ',' ', punctuation)).lower().split())
@@ -20,16 +24,16 @@ def trainingDataSet(classification, sentence):
         # retirando palavras repetidas, e pontuacao
         wordSet = uniqueWords(sentence)
         for word in wordSet:
-            print('checando', word)
+            # print('checando', word)
             # se a palavra ja foi encontrada antes em outro arquivo que tambem e positivo
             if word in positiveSet and len(word) > 3:
-                print('achei de novo', word)
+                # print('achei de novo', word)
                 # vamos aumentar o peso da palavra
                 PosPoints[word] = PosPoints[word] + 1
             # PosPoints.setdefault(word,[1,'true']) nao sei o que e isso
             # se a palavra nao foi encontrada
             elif len(word) > 3:
-                print('adicionando', word)
+                # print('adicionando', word)
                 # coloco ela na lista de palavras
                 positiveSet.add(word)
                 # e coloco com o valor 0 no set e o tempo atual
@@ -41,28 +45,22 @@ def trainingDataSet(classification, sentence):
         # retirando palavras repetidas, e pontuacao
         wordSet = uniqueWords(sentence)
         for word in wordSet:
-            print('checando', word)
+            # print('checando', word)
             # se a palavra ja foi encontrada antes em outro arquivo que tambem e negativo
             if word in negativeSet and len(word) > 3:
-                print ('achei de novo', word)
+                # print('achei de novo', word)
                 # vamos aumentar o peso da palavra
                 NegPoints[word] = NegPoints[word] + 1
             # NegPoints.setdefault(word,[1,'true']) nao sei o que e isso
             # se a palavra nao foi encontrada
             elif len(word) > 3:
-                print ('adicionando', word)
+                # print('adicionando', word)
                 # coloco ela na lista de palavras
                 negativeSet.add(word)
                 # e coloco com o valor 0 no set e o tempo atual
                 NegPoints.setdefault(word, 1)
 
 def cleanSets(NegWeightCut, PosWeightCut):
-
-    for word in positiveSet.copy():
-        if word in negativeSet.copy():
-            temp = PosPoints[word]
-            PosPoints[word] -= NegPoints[word]
-            NegPoints[word] -= temp
 
     for word in negativeSet.copy():
         if NegPoints[word] < NegWeightCut:
@@ -75,6 +73,9 @@ def cleanSets(NegWeightCut, PosWeightCut):
             PosPoints.pop(word)
 
 def validateNewReview(sentence):
+    global totalNegReviews
+    global totalPosReviews
+    global TotalTrainings
 
     wordSet = uniqueWords(sentence)
     points = 0
@@ -88,68 +89,103 @@ def validateNewReview(sentence):
 
     if points > 0:
         print('That was a positive review! ')
-        # trainingDataSet('positive',sentence)
+        trainingDataSet('positive',sentence)
+        TotalTrainings += 1
+        totalPosReviews += 1
     elif points < 0:
         print('That was a negative review! ')
-        # trainingDataSet('negative', sentence)
+        trainingDataSet('negative', sentence)
+        TotalTrainings += 1
+        totalNegReviews += 1
     else:
-        print('That was an unconclusive review... ')
+        print('That was an inconclusive review... ')
     print(points)
     return points
 
 def main():
-
-    # text = open('0_2.txt', 'r')
-    # trainingDataSet('negative', text.read())
-    # text = open('meuExemplo.txt', 'r')
-    # trainingDataSet('negative', text.read())
+    global TotalTrainings
     posTrainings = 0
     negTrainings = 0
-    # caminho para pasta com os negativos
-    pathNeg = 'ex/'
-    # caminho para pasta com os positivos
-    pathPos = 'exPos/'
 
+    # caminho para pasta com os negativos
+    pathNeg = 'TrainingNeg/'
+    # caminho para pasta com os positivos
+    pathPos = 'TrainingPos/'
+
+    maxTrainings = int(input('Type the number of trainings: '))
+    print('Started Training. Please wait...')
+    start_time = time.time()
     # aqui passamos por todos os arquivos e colocamos eles no hash/set
     for filename in os.listdir(pathNeg):
+        if negTrainings >= maxTrainings:
+            break
         filename = pathNeg + filename
-        f = open(filename, 'r')
+        f = open(filename, 'r', encoding="Latin-1")
         trainingDataSet('negative', f.read())
         negTrainings += 1
         f.close()
 
     # fazemos o mesmo com os arquivos positivos
     for filename in os.listdir(pathPos):
+        if posTrainings >= maxTrainings:
+            break
         filename = pathPos + filename
-        f = open(filename, 'r')
+        f = open(filename, 'r', encoding="Latin-1")
         trainingDataSet('positive', f.read())
         posTrainings += 1
         f.close()
 
-    cleanSets((negTrainings/10), (posTrainings/10))
+    # limpo os sets com palavras que possam ser irrelevantes ou pouco apareceram
+    cleanSets((negTrainings/6), (posTrainings/7))
 
-    # entao colocamos num arquivo so, com os pesos
-    finalFile = open('outputN.txt', 'w+')
-    for key, value in NegPoints.items():
-        print(key, value)
-        finalFile.write(str(key) + ' ' + str(value) + '\n')
-    finalFile.close()
+    # começo a contar o tempo de treinamento
+    training_time = (time.time() - start_time)
+    # default paths
+    validPathPos = 'validPos/'
+    validPathNeg = 'validNeg/'
+    totalValid = 0
+    print('Finished Training...')
+    maxClass = int(input('Type the number of reviews to classify: '))
+    path = input('Enter the path of the reviews: ')
 
-    finalFile = open('outputP.txt','w+')
-    for key, value in PosPoints.items():
-        print(key, value)
-        finalFile.write(str(key) + ' ' + str(value) + '\n')
-    finalFile.close()
+    if path.lower() == 'defaultp':
+        path = validPathPos
+    elif path.lower() == 'defaultn':
+        path = validPathNeg
 
-    # validFile = open('ValidNeg/12492_4.txt')
-    # validateNewReview(validFile.read())
+    # classifico enquanto houver arquivo ou eu não ultrapassar o limite de classificações
+    classifying_time = time.time()
+    for filename in os.listdir(path):
+        if totalValid > maxClass:
+            break
+        if (TotalTrainings % 650) == 0:
+            cleanSets((TotalTrainings / 10), (TotalTrainings / 10))
+        filename = path + filename
+        validFile = open(filename, encoding='utf-8')
+        print('Reading file: ',filename)
+        validateNewReview(validFile.read())
+        totalValid += 1
 
-    validFile = open('ValidPos/999_8.txt')
-    validateNewReview(validFile.read())
+    classifying_finalTime = time.time() - classifying_time
 
-    print('Positive Trainings: ' + str(posTrainings))
-    print('Negative Trainings: ' + str(negTrainings))
-    # E ao inves de colocar um limite. Podemos simplesmente separar os arquivos de treinamento e de validacao em pastas diferentes.
+    # pego o tipo das reviews a serem classificadas, só para mostrar a precisão
+    typeofReviews = input('What was the classification of the reviews? ')
+
+    if typeofReviews.lower() == 'negative':
+        percent = 100.0 - (totalPosReviews/(totalPosReviews+totalNegReviews)) * 100
+    elif typeofReviews.lower() == 'positive':
+        percent = 100.0 - (totalNegReviews / (totalPosReviews + totalNegReviews)) * 100
+
+    # mostro os resultados obtidos
+    print('Positive Reviews: ', totalPosReviews)
+    print('Negative Reviews: ', totalNegReviews)
+
+    # mostro o percentual de precisão
+    print('Correctness: ', percent, '%')
+    print('Elapsed Time while training: ', training_time)
+    print('Elapsed Time while classifying: ', classifying_finalTime)
+
+    input()
 
 
 main()
