@@ -17,12 +17,17 @@ global NegPoints
 global maiorPeso
 #usado para guardar a maior ocorrencia encontrada
 #assim posso usa-la numa regra de 3
+global tamVetor
+global totalSet
+global totalHash
 
 
 positiveSet = set()
 negativeSet = set()
 PosPoints = dict()
 NegPoints = dict()
+totalSet = set()
+totalHash = dict()
 
 
 #vou usar part1 como treinamento e part2 como validacao
@@ -131,17 +136,82 @@ def retiraIntersecao(taxa):
 		negativeSet.remove(word)
 		NegPoints.pop(word)
 
-	for word in positiveSet:		
+def uniao():
+	global positiveSet
+	global negativeSet
+	global PosPoints
+	global NegPoints
+	global maiorPeso
+	global totalHash
+	global totalSet
+
+	totalSet = set()
+	totalHash = dict()
+	i = 0
+
+	for word in positiveSet:
+		if word not in totalSet:
+			totalSet.add(word)
+			#colocando index
+			totalHash.setdefault(word, i)
+			i = i+1
 		#guardando a maior ocorrencia encontrada ate agora
 		if maiorPeso < PosPoints[word]:
 			maiorPeso = PosPoints[word]
 
 	for word in negativeSet:		
+		if word not in totalSet:
+			totalSet.add(word)
+			#colocando index
+			totalHash.setdefault(word, i)
+			i = i+1
 		#guardando a maior ocorrencia encontrada ate agora
 		if maiorPeso < NegPoints[word]:
 			maiorPeso = NegPoints[word]
 
+def contaOcorrencia(sentenca, f):
+	global positiveSet
+	global negativeSet
+	global PosPoints
+	global NegPoints
+	global maiorPeso
+	global totalHash
+	global totalSet
 
+	# retirando palavras repetidas, e pontuacao
+	wordSet = uniqueWords(sentenca)
+
+	#posicoesCriticas = list()
+	for word in wordSet:
+		#if word not in totalHash:
+			#print 'nao encontrado ', word
+		if word in totalHash:
+			f.write(str(totalHash[word]) + ' ' )
+			#posicoesCriticas.insert(0, totalHash[word])
+			#print totalHash[word]
+	#posicoesCriticas.sort()
+
+
+	#eu fiz de uma forma complicada aqui, mas a razao e que eu precisava garantir que os dados seriam gravados no arquivo precisamente na mesma ordem de palvras.
+	# por isso associei um index a cada palavra e estou percorrendo o hash e verificando se as palavras existem ou nao neste exemplo.
+	# se a palvra existir guardo nauqela posicao o numero 1, indicando ocorrencia
+	#se nao, guardo naquela posicao o numero 0
+	#e = 0
+	#i = 0
+	#tam = len(posicoesCriticas)
+	#for word in totalSet:
+	#	if e<tam and posicoesCriticas[e] == i:
+	#		#f.write(str(1) + ' ')
+	#		print str(1) + ' '
+	#		e = e + 1
+	#	else:
+	#		print str(0) + ' '
+	#		#f.write(str(0) + ' ')
+	#	i = i + 1
+	
+
+
+	f.write('\n')
 
 
 #aqui passamos por todos os arquivos e colocamos eles no hash/set
@@ -162,7 +232,6 @@ maiorPeso = 0
 
 retiraIntersecao(taxa)
 
-
 #entao colocamos num arquivo so, com os pesos
 finalFile = open('outputN','w+')
 finalFile.write(str(maiorPeso) + '\n')
@@ -177,6 +246,26 @@ for key, value in PosPoints.iteritems():
 	#print key, value
 	if value > 2:
 		finalFile.write(str(key) + ' ' + str(value) + '\n')
+#---------------------------------------------------------------------
 
-#Falta colocar a tal nota de corte
-#E ao inves de colocar um limite. Podemos simplesmente separar os arquivos de treinamento e de validacao em pastas diferentes.
+#agora passamos por todos os arquivos novamente, dessa vez comparando eles com o set total e colocando em um outro arquivo
+
+uniao()
+
+pathNegDest = 'dest/neg/dest'
+pathPosDest = 'dest/pos/dest'
+
+e = 0
+fDest = open(pathNegDest, 'w')
+for filename in os.listdir(pathNeg):
+	filename = pathNeg+filename
+	f = open(filename, 'r')
+	contaOcorrencia(f.read(), fDest)
+	print e
+	e = e+1
+
+fDest = open(pathPosDest, 'w')
+for filename in os.listdir(pathPos):
+	filename = pathPos+filename
+	f = open(filename, 'r')
+	contaOcorrencia(f.read(), fDest)
