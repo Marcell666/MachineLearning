@@ -1,6 +1,8 @@
 from string import maketrans
 from string import punctuation
 import string 
+#os e para iterar em arquivos
+import os
 
 global positiveSet
 global PosPoints
@@ -22,42 +24,83 @@ def trainingDataSet(classification, sentence):
 	global PosPoints
 	global NegPoints
 
-	# retirando palavras repetidas, e pontuacao
-	wordSet = uniqueWords(sentence)
-	for word in wordSet:
-#se ela ja foi encontrada antes
-#e o tempo em que isso aconteceu e diferente do atual
-# eu faco isso porque nao quero contar duas vezes uma palavra no mesmo arquivo.
-# o tempo aumenta uma unidade a cada vez que mudo de arquivo
-#
-#eu espero que exista curto-circuito aqui
-		print 'checando ', word
-		#se a palavra ja foi encontrada antes em outro arquivo que tambem e positivo
-		if word in positiveSet:
-			print 'achei de novo', word
-			#vamos aumentar o peso da palavra
-			PosPoints[word] =  PosPoints[word] + 1
-			#PosPoints.setdefault(word,[1,'true']) nao sei o que e isso
-		#se a palavra nao foi encontrada
-		else:
-			print 'adicionando', word
-			#coloco ela na lista de palavras
-			positiveSet.add(word)
-			#e coloco com o valor 0 no set e o tempo atual
-			PosPoints.setdefault(word, 1)
+	if classification == 'positive':
+		# retirando palavras repetidas, e pontuacao
+		wordSet = uniqueWords(sentence)
+		for word in wordSet:
+			print 'checando ', word
+			#se a palavra ja foi encontrada antes em outro arquivo que tambem e positivo
+			if word in positiveSet:
+				print 'achei de novo', word
+				#vamos aumentar o peso da palavra
+				PosPoints[word] =  PosPoints[word] + 1
+				#PosPoints.setdefault(word,[1,'true']) nao sei o que e isso
+			#se a palavra nao foi encontrada
+			else:
+				print 'adicionando', word
+				#coloco ela na lista de palavras
+				positiveSet.add(word)
+				#e coloco com o valor 0 no set e o tempo atual
+				PosPoints.setdefault(word, 1)
 
-	for key, value in PosPoints.iteritems():
-		print key, value
+#		for key, value in PosPoints.iteritems():
+#			print key, value
+	elif classification == 'negative':
+		# retirando palavras repetidas, e pontuacao
+		wordSet = uniqueWords(sentence)
+		for word in wordSet:
+			print 'checando ', word
+			#se a palavra ja foi encontrada antes em outro arquivo que tambem e negativo
+			if word in negativeSet:
+				print 'achei de novo', word
+				#vamos aumentar o peso da palavra
+				NegPoints[word] =  NegPoints[word] + 1
+				#NegPoints.setdefault(word,[1,'true']) nao sei o que e isso
+			#se a palavra nao foi encontrada
+			else:
+				print 'adicionando', word
+				#coloco ela na lista de palavras
+				negativeSet.add(word)
+				#e coloco com o valor 0 no set e o tempo atual
+				NegPoints.setdefault(word, 1)
+
+#		for key, value in NegPoints.iteritems():
+#			print key, value
 
 text = open('0_2.txt','r')
 trainingDataSet('negative', text.read())
 text = open('meuExemplo.txt','r')
 trainingDataSet('negative', text.read())
-#trainingDataSet('negative','his costners around else')
-#for word in negativeSet:
-#	finalFile.write(word + '\n')
-#for key in NegPoints:
-#	print(key,NegPoints[key])
 
-#print(input())
+
+#caminho para pasta com os negativos
+pathNeg = 'ex/'
+#caminho para pasta com os positivos
+#pathPos = 'exPos'
+
+#aqui passamos por todos os arquivos e colocamos eles no hash/set
+for filename in os.listdir(pathNeg):
+	filename = pathNeg+filename
+	f = open(filename, 'r')
+	trainingDataSet('negative', f.read())
+
+#entao colocamos num arquivo so, com os pesos
+finalFile = open('outputN','w+')
+for key, value in NegPoints.iteritems():
+	print key, value
+	finalFile.write(str(key) + ' ' + str(value) + '\n')
+
+#fazemos o mesmo com os arquivos positivos
+#for filename in os.listdir(pathPos):
+#	filename = pathPos+filename
+#	f = open(filename, 'r')
+#	trainingDataSet('positive', f.read())
+
+#finalFile = open('outputP','w+')
+#for key, value in PosPoints.iteritems():
+#	print key, value
+#	finalFile.write(str(key) + ' ' + str(value) + '\n')
+
+#Falta colocar a tal nota de corte
+#E ao inves de colocar um limite. Podemos simplesmente separar os arquivos de treinamento e de validacao em pastas diferentes.
 
