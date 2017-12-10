@@ -144,11 +144,11 @@ int main(void)
     /* Run the network and see what it predicts. */
 	for(i=0;i<EXEMPLOS;i++){
 		result = *genann_run(ann, inputPos[i]);
-	    printf("Output for line %d of POS is %1.f.\n", i, result);
-		if(result == 1 ) acertosPos++;
+	    printf("Output for line %d of POS is %lf.\n", i, result);
+		if(result >= 0.8D ) acertosPos++;
 		result = *genann_run(ann, inputNeg[i]);
-	    printf("Output for line %d of NEG is %1.f.\n", i, result);
-		if(result == 0) acertosNeg++;
+	    printf("Output for line %d of NEG is %lf.\n", i, result);
+		if(result >= 0.8D ) acertosNeg++;
 	
 	}
 	printf("\n\n");
