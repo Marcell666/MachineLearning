@@ -122,19 +122,29 @@ def retiraIntersecao(taxa):
 	global PosPoints
 	global NegPoints
 	global maiorPeso
-	retirar = list()
+	retirar = set()
 
 	for word in positiveSet:
-		print word		
-		if word in negativeSet:
+		if PosPoints[word] < 100:
+			print 'pouco frequente, retirando ', word
+			retirar.add(word)
+		elif word in negativeSet:
 			if compara(PosPoints[word], NegPoints[word], taxa):
-				print 'retirando', word
-				retirar.insert(0, word)
+				print 'parece neutra, retirando ', word
+				retirar.add( word)
+		else:
+			print 'deixando ', word
+	for word in negativeSet:
+		if NegPoints[word] < 100:
+			retirar.add(word)
+
 	for word in retirar:
-		positiveSet.remove(word)
-		PosPoints.pop(word)
-		negativeSet.remove(word)
-		NegPoints.pop(word)
+		if word in positiveSet:
+			positiveSet.remove(word)
+			PosPoints.pop(word)
+		if word in negativeSet:
+			negativeSet.remove(word)
+			NegPoints.pop(word)
 
 def uniao():
 	global positiveSet
@@ -231,38 +241,33 @@ taxa = 85
 maiorPeso = 0
 
 retiraIntersecao(taxa)
+uniao()
 
 #entao colocamos num arquivo so, com os pesos
 finalFile = open('outputN','w+')
 finalFile.write(str(maiorPeso) + '\n')
 for key, value in NegPoints.iteritems():
 	#print key, value
-	if value > 2:
-		finalFile.write(str(key) + ' ' + str(value) + '\n')
+	finalFile.write(str(key) + ' ' + str(value) + '\n')
 
 finalFile = open('outputP','w+')
 finalFile.write(str(maiorPeso) + '\n')
 for key, value in PosPoints.iteritems():
 	#print key, value
-	if value > 2:
-		finalFile.write(str(key) + ' ' + str(value) + '\n')
+	finalFile.write(str(key) + ' ' + str(value) + '\n')
 #---------------------------------------------------------------------
 
 #agora passamos por todos os arquivos novamente, dessa vez comparando eles com o set total e colocando em um outro arquivo
 
-uniao()
 
 pathNegDest = 'dest/neg/dest'
 pathPosDest = 'dest/pos/dest'
 
-e = 0
 fDest = open(pathNegDest, 'w')
 for filename in os.listdir(pathNeg):
 	filename = pathNeg+filename
 	f = open(filename, 'r')
 	contaOcorrencia(f.read(), fDest)
-	print e
-	e = e+1
 
 fDest = open(pathPosDest, 'w')
 for filename in os.listdir(pathPos):
