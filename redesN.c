@@ -77,6 +77,9 @@ int main(void)
 	int i, e;
 	double pos = 1;
 	double neg = 0;
+	int acertosPos = 0;
+	int acertosNeg = 0;
+	double result;
 
 	inputPos = (double**) malloc(EXEMPLOS*sizeof(double*));
 	for(i=0;i<EXEMPLOS;i++)
@@ -117,7 +120,7 @@ int main(void)
     /* New network with 60 inputs,
      * 2 hidden layer of 30 neurons,
      * and 1 output. */
-	genann *ann = genann_init(ENTRADAS, 1, 2, 1);
+	genann *ann = genann_init(ENTRADAS, 2, 30, 1);
 
     /* Train on the 100 labeled data points many times. */
     for (i = 0; i < 500; ++i) {
@@ -140,12 +143,18 @@ int main(void)
 	fclose(f);
     /* Run the network and see what it predicts. */
 	for(i=0;i<EXEMPLOS;i++){
-	    printf("Output for line %d of POS is %1.f.\n", i, *genann_run(ann, inputPos[i]));
-	    printf("Output for line %d of NEG is %1.f.\n", i, *genann_run(ann, inputNeg[i]));
+		result = *genann_run(ann, inputPos[i]);
+	    printf("Output for line %d of POS is %1.f.\n", i, result);
+		if(result == 1 ) acertosPos++;
+		result = *genann_run(ann, inputNeg[i]);
+	    printf("Output for line %d of NEG is %1.f.\n", i, result);
+		if(result == 0) acertosNeg++;
+	
 	}
-	for(i=0;i<ENTRADAS;i++)
-		printf("%lf, ", inputNeg[499][i]);
-	printf("\n");
+	printf("\n\n");
+
+	printf("acertos positivos: %d\n", acertosPos);
+	printf("acertos negativos: %d\n", acertosNeg);
 
     genann_free(ann);
     return 0;
